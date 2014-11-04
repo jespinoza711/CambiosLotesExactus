@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<SqlWorkbenchSqlProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Name="LotesExactus">
+  <Items>
+    <LogicalFolder Name="Connections" Type="2">
+      <Items>
+        <ConnectionNode Name="JESPINOZA-PC\JESPINOZA:JESPINOZA-PC\JESPINOZA">
+          <Created>2014-11-03T16:14:48.4755131-06:00</Created>
+          <Type>SQL</Type>
+          <Server>JESPINOZA-PC\JESPINOZA</Server>
+          <UserName />
+          <Authentication>Windows Authentication</Authentication>
+          <InitialDB />
+          <LoginTimeout>15</LoginTimeout>
+          <ExecutionTimeout>0</ExecutionTimeout>
+          <ConnectionProtocol>NotSpecified</ConnectionProtocol>
+          <ApplicationName> </ApplicationName>
+        </ConnectionNode>
+      </Items>
+    </LogicalFolder>
+    <LogicalFolder Name="Queries" Type="0">
+      <Items>
+        <FileNode Name="usp_sincroInsertaLineaTransInv.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:JESPINOZA-PC\JESPINOZA:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>JESPINOZA-PC\JESPINOZA</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>usp_sincroInsertaLineaTransInv.sql</FullPath>
+        </FileNode>
+        <FileNode Name="Insercion de Lotes.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:JESPINOZA-PC\JESPINOZA:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>JESPINOZA-PC\JESPINOZA</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>Insercion de Lotes.sql</FullPath>
+        </FileNode>
+        <FileNode Name="AutoSugiereLotes.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:JESPINOZA-PC\JESPINOZA:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>JESPINOZA-PC\JESPINOZA</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>AutoSugiereLotes.sql</FullPath>
+        </FileNode>
+        <FileNode Name="sincroInsertaLineaTransInvLote.sql">
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:JESPINOZA-PC\JESPINOZA:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>JESPINOZA-PC\JESPINOZA</AssociatedConnSrvName>
+          <AssociatedConnUserName />
+          <FullPath>sincroInsertaLineaTransInvLote.sql</FullPath>
+        </FileNode>
+      </Items>
+    </LogicalFolder>
+    <LogicalFolder Name="Miscellaneous" Type="3">
+      <Items />
+    </LogicalFolder>
+  </Items>
+</SqlWorkbenchSqlProject>
