@@ -4,8 +4,10 @@ BEGIN TRAN
 
 declare @Fuente nvarchar(20), @CODSUCURSAL NVARCHAR(4), @PAQUETE NVARCHAR(4), 
 		@DOCUMENTO NVARCHAR(20) , @Articulo varchar(20), @Cantidad decimal (28,8),
-		@PrecioLocal decimal (28,8), @PrecioDolar decimal (28,8), @BODEGADESTINO NVARCHAR(4)
-
+		@PrecioLocal decimal (28,8), @PrecioDolar decimal (28,8),
+		@CostoLocal DECIMAL(28,8),@CostoDolar DECIMAL(28,8), @BODEGADESTINO NVARCHAR(4),@TipoTransaccion NVARCHAR(1),
+		@LoteCompra AS NVARCHAR(15)
+		
 SET @Fuente='TRASLADOAGROQUIMICOS'
 SET @CODSUCURSAL='AL01'
 SET @PAQUETE='MOVB'
@@ -31,10 +33,12 @@ BEGIN TRY
 	DECLARE @iRwCnt INT,@Lote NVARCHAR(15),@i INT,@CantidadLote DECIMAL(28,8)
 	DECLARE @Linea AS INT
 	
-	INSERT INTO #Resultado
-	EXEC FNICA.usp_AutoSugiereLotesExactus @Articulo,@CODSUCURSAL,@BodegaDestino,@Cantidad 
-	SET @iRwCnt=@@ROWCOUNT
-		
+	IF (@TipoTransaccion<>'O')
+	BEGIN
+		INSERT INTO #Resultado
+		EXEC FNICA.usp_AutoSugiereLotesExactus @Articulo,@CODSUCURSAL,@BodegaDestino,@Cantidad 
+		SET @iRwCnt=@@ROWCOUNT
+	END
 	
 	SET @Linea= (SELECT MAX(LINEA_DOC_INV)
 	               FROM fnica.LINEA_DOC_INV WHERE DOCUMENTO_INV=@DOCUMENTO)
@@ -71,7 +75,7 @@ BEGIN TRY
 		DROP TABLE #Resultado
 	END
 	
-	IF UPPER (@Fuente)  = 'FACTURACION'
+	IF UPPER (@Fuente)  = 'FACTURACION' OR  UPPER (@Fuente)  = 'DEVOLUCION'
 	BEGIN
 		SET @TIPOARTICULO = (SELECT TIPO FROM EXACTUS.FNICA.ARTICULO WHERE ARTICULO = @Articulo )
 		IF 	@TIPOARTICULO = 'T'
@@ -83,9 +87,20 @@ BEGIN TRY
 			BEGIN
 				set @CODSUCURSAL = 'CC00'
 			END
-			SET @PAQUETE = 'FA'+SUBSTRING(@CODSUCURSAL,1, 2)
+			
+			
+			
+			IF UPPER (@Fuente)  = 'DEVOLUCION'
+			BEGIN
+				SET @PAQUETE = 'DEVA'
+				SELECT @CostoLocal= COSTOLOCAL,@CostoDolar=COSTODOLAR FROM fnica.fafFACTURADETALLE WHERE CODSUCURSAL=@TMPCODSUCURSAL AND FACTURA=CAST(CAST(RIGHT(@DOCUMENTO,10) AS DECIMAL) AS NVARCHAR(10)) AND ARTICULO=@Articulo
+			END 
+			ELSE
+				SET @PAQUETE = 'FA'+SUBSTRING(@CODSUCURSAL,1, 2)
+				
+	
 			SET @DOCUMENTO = @DOCUMENTO
-
+			
 			set @i = 1
 			SET @Lote=''
 			set @CantidadLote = 0
@@ -94,6 +109,10 @@ BEGIN TRY
 				select @Lote = Lote, @CantidadLote = Cantidad from #Resultado where ID = @i
 						
 				SET @Linea=@Linea+1
+				
+				IF UPPER (@Fuente)  = 'DEVOLUCION'
+					SET @CantidadLote = @CantidadLote *-1
+				
 				INSERT FNICA.LINEA_DOC_INV ( 
 					[PAQUETE_INVENTARIO],[DOCUMENTO_INV],[LINEA_DOC_INV] ,[AJUSTE_CONFIG]
 				  ,[ARTICULO],[BODEGA],LOCALIZACION, LOTE,[TIPO],[SUBTIPO],[SUBSUBTIPO]
@@ -110,11 +129,69 @@ BEGIN TRY
 			SELECT * FROM #ResultadO
 			DROP TABLE #Resultado
 		END
-	
-
-		
-		END
 	END
+	
+	IF UPPER (@Fuente)  = 'FORMULA' OR 
+		UPPER (@Fuente)  = 'REEMPAQUE'
+	BEGIN
+		
+		DECLARE @TipoTransInv NVARCHAR(10), @Tipo NVARCHAR(1), @SubTipo NVARCHAR (1), @SubSubTipo NVARCHAR(1)
+		
+		
+		IF UPPER (@Fuente)  = 'FORMULA'
+			SET @PAQUETE = 'FORM'
+		IF UPPER (@Fuente)  = 'REEMPAQUE'
+			SET @PAQUETE = 'REPQ'
+		
+		IF @TipoTransaccion = 'O' 
+		begin
+			SET @TipoTransInv = '~OO~'
+			SET @TIpo = 'O'
+			SET @SubTipo = 'D'
+			SET @SubSubTipo ='L'
+			
+			INSERT FNICA.LINEA_DOC_INV ( 
+					[PAQUETE_INVENTARIO],[DOCUMENTO_INV],[LINEA_DOC_INV] ,[AJUSTE_CONFIG]
+				  ,[ARTICULO],[BODEGA],LOCALIZACION, LOTE,[TIPO],[SUBTIPO],[SUBSUBTIPO]
+				  ,[CANTIDAD] ,[COSTO_TOTAL_LOCAL] ,[COSTO_TOTAL_DOLAR]
+				  ,[PRECIO_TOTAL_LOCAL] ,[PRECIO_TOTAL_DOLAR] ,[BODEGA_DESTINO])
+			VALUES (@PAQUETE,@DOCUMENTO, @Linea, @TipoTransInv , @Articulo, @CODSUCURSAL,'ND',@LoteCompra, @TIpo,@SubTipo,@SubSubTipo, @Cantidad,
+				@CostoLocal,@CostoDolar, 0, 0, @BODEGADESTINO )	
+		end
+		IF @TipoTransaccion = 'C' 
+		begin
+			SET @TipoTransInv = '~CC~'
+			SET @TIpo = 'C'
+			SET @SubTipo = 'D'
+			SET @SubSubTipo ='N'
+	
+			
+			set @i = 1
+			SET @Lote=''
+			set @CantidadLote = 0
+			while @i <= @iRwCnt 
+			begin
+				select @Lote = Lote, @CantidadLote = Cantidad from #Resultado where ID = @i
+						
+				SET @Linea=@Linea+1
+				
+								
+				INSERT FNICA.LINEA_DOC_INV ( 
+					[PAQUETE_INVENTARIO],[DOCUMENTO_INV],[LINEA_DOC_INV] ,[AJUSTE_CONFIG]
+				  ,[ARTICULO],[BODEGA],LOCALIZACION, LOTE,[TIPO],[SUBTIPO],[SUBSUBTIPO]
+				  ,[CANTIDAD] ,[COSTO_TOTAL_LOCAL] ,[COSTO_TOTAL_DOLAR]
+				  ,[PRECIO_TOTAL_LOCAL] ,[PRECIO_TOTAL_DOLAR] ,[BODEGA_DESTINO], CENTRO_COSTO, CUENTA_CONTABLE
+					)
+				
+				VALUES (@PAQUETE,@DOCUMENTO, @Linea, @TipoTransInv , @Articulo, @CODSUCURSAL,'ND',@Lote,
+						@Tipo,@SubTipo,@SubSubTipo, @CantidadLote,0,0, 0, 0, @BODEGADESTINO,'00-00-00', '9-04-03-000-000'  )
+				
+				SET @i=@i+1
+			END
+		
+			
+		END
+	
 	
 END TRY
 BEGIN CATCH	
