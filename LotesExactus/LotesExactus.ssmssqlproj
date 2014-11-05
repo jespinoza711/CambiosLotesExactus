@@ -44,8 +44,8 @@
           <FullPath>4 -sincroInsertaLineaTransInvLoteAutoSugerido.sql</FullPath>
         </FileNode>
         <FileNode Name="1 -ActualizacionProductos.sql">
-          <AssociatedConnectionMoniker />
-          <AssociatedConnSrvName />
+          <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:JESPINOZA-PC\JESPINOZA:True</AssociatedConnectionMoniker>
+          <AssociatedConnSrvName>JESPINOZA-PC\JESPINOZA</AssociatedConnSrvName>
           <AssociatedConnUserName />
           <FullPath>1 -ActualizacionProductos.sql</FullPath>
         </FileNode>
