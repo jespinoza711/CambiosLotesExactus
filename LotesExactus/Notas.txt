@@ -1,0 +1,10 @@
+Parametros de Inventario
+	-Se Marco Opcion Reservar existencias al guardar documentos en paquetes
+
+Maestro Articulos:
+	-Todo Articulo nuevo se debe de marcar "usa Lotes" en la pestaña de Lotes
+	-El resto de Articulo se debe actualizar por DB este paremetro
+	-Si el Lote no esta marcado como que permite ingresos parciales, no puede ser comprados dos veces.
+	-No debe marcar los productos como Obliga a Cuantentena
+	
+	

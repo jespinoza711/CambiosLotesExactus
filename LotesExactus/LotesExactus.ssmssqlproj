@@ -13,40 +13,53 @@
           <LoginTimeout>15</LoginTimeout>
           <ExecutionTimeout>0</ExecutionTimeout>
           <ConnectionProtocol>NotSpecified</ConnectionProtocol>
-          <ApplicationName> </ApplicationName>
+          <ApplicationName />
         </ConnectionNode>
       </Items>
     </LogicalFolder>
     <LogicalFolder Name="Queries" Type="0">
       <Items>
-        <FileNode Name="usp_sincroInsertaLineaTransInv.sql">
+        <FileNode Name="5 -usp_sincroInsertaLineaTransInvLote.sql">
           <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:JESPINOZA-PC\JESPINOZA:True</AssociatedConnectionMoniker>
           <AssociatedConnSrvName>JESPINOZA-PC\JESPINOZA</AssociatedConnSrvName>
           <AssociatedConnUserName />
-          <FullPath>usp_sincroInsertaLineaTransInv.sql</FullPath>
+          <FullPath>5 -usp_sincroInsertaLineaTransInvLote.sql</FullPath>
         </FileNode>
-        <FileNode Name="Insercion de Lotes.sql">
+        <FileNode Name="2 -Insercion de Lotes.sql">
           <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:JESPINOZA-PC\JESPINOZA:True</AssociatedConnectionMoniker>
           <AssociatedConnSrvName>JESPINOZA-PC\JESPINOZA</AssociatedConnSrvName>
           <AssociatedConnUserName />
-          <FullPath>Insercion de Lotes.sql</FullPath>
+          <FullPath>2 -Insercion de Lotes.sql</FullPath>
         </FileNode>
-        <FileNode Name="AutoSugiereLotes.sql">
+        <FileNode Name="3 -AutoSugiereLotes.sql">
           <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:JESPINOZA-PC\JESPINOZA:True</AssociatedConnectionMoniker>
           <AssociatedConnSrvName>JESPINOZA-PC\JESPINOZA</AssociatedConnSrvName>
           <AssociatedConnUserName />
-          <FullPath>AutoSugiereLotes.sql</FullPath>
+          <FullPath>3 -AutoSugiereLotes.sql</FullPath>
         </FileNode>
-        <FileNode Name="sincroInsertaLineaTransInvLote.sql">
+        <FileNode Name="4 -sincroInsertaLineaTransInvLoteAutoSugerido.sql">
           <AssociatedConnectionMoniker>8c91a03d-f9b4-46c0-a305-b5dcc79ff907:JESPINOZA-PC\JESPINOZA:True</AssociatedConnectionMoniker>
           <AssociatedConnSrvName>JESPINOZA-PC\JESPINOZA</AssociatedConnSrvName>
           <AssociatedConnUserName />
-          <FullPath>sincroInsertaLineaTransInvLote.sql</FullPath>
+          <FullPath>4 -sincroInsertaLineaTransInvLoteAutoSugerido.sql</FullPath>
+        </FileNode>
+        <FileNode Name="1 -ActualizacionProductos.sql">
+          <AssociatedConnectionMoniker />
+          <AssociatedConnSrvName />
+          <AssociatedConnUserName />
+          <FullPath>1 -ActualizacionProductos.sql</FullPath>
         </FileNode>
       </Items>
     </LogicalFolder>
     <LogicalFolder Name="Miscellaneous" Type="3">
-      <Items />
+      <Items>
+        <FileNode Name="Notas.txt">
+          <AssociatedConnectionMoniker />
+          <AssociatedConnSrvName />
+          <AssociatedConnUserName />
+          <FullPath>Notas.txt</FullPath>
+        </FileNode>
+      </Items>
     </LogicalFolder>
   </Items>
 </SqlWorkbenchSqlProject>

@@ -1,7 +1,28 @@
+---Creacion de la cabecera del documento
+DECLARE @NumDocumento AS NVARCHAR(20)
+SET @NumDocumento='Traslado de Ejemplo'
+EXEC [fnica].[usp_sincroCrearCabeceraTransInv]  'TRASLADOAGROQUIMICOS' , 'JT01',@NumDocumento OUTPUT, '20141104','Traslado de ejemplo'
+SELECT @NumDocumento
+SELECT * FROM fnica.DOCUMENTO_INV WHERE DOCUMENTO_INV='TP0000020058'
+
+
+GO 
+
+
+--------------------------------------
 
 --[fnica].[usp_sincroInsertaLineaTransInv]
-BEGIN TRAN
 
+CREATE PROCEDURE fnica.usp_sincroInsertaLineaTransInvLoteAutoSugerido
+	@Fuente nvarchar(20), @CODSUCURSAL NVARCHAR(4), @PAQUETE NVARCHAR(4), 
+	@DOCUMENTO NVARCHAR(20) , @Articulo varchar(20), @Cantidad decimal (28,8),
+	@PrecioLocal decimal (28,8), @PrecioDolar decimal (28,8),
+	@CostoLocal DECIMAL(28,8),@CostoDolar DECIMAL(28,8), @BODEGADESTINO NVARCHAR(4),@TipoTransaccion NVARCHAR(1),
+	@LoteCompra AS NVARCHAR(15)
+
+AS 
+
+/*
 declare @Fuente nvarchar(20), @CODSUCURSAL NVARCHAR(4), @PAQUETE NVARCHAR(4), 
 		@DOCUMENTO NVARCHAR(20) , @Articulo varchar(20), @Cantidad decimal (28,8),
 		@PrecioLocal decimal (28,8), @PrecioDolar decimal (28,8),
@@ -12,11 +33,13 @@ SET @Fuente='TRASLADOAGROQUIMICOS'
 SET @CODSUCURSAL='AL01'
 SET @PAQUETE='MOVB'
 SET @Articulo='FE00012'
-SET @Cantidad=3467
+SET @Cantidad=7
 SET @PrecioLocal=0
 SET @PrecioDolar=0
 SET @BODEGADESTINO='JT01'
-SET @DOCUMENTO='TP0000020056'
+SET @DOCUMENTO='TP0000020058'
+SET @TipoTransaccion='J'
+*/
 
 DECLARE @TIPOARTICULO NVARCHAR(1),@TMPCODSUCURSAL NVARCHAR (4)
 
@@ -77,7 +100,7 @@ BEGIN TRY
 	
 	IF UPPER (@Fuente)  = 'FACTURACION' OR  UPPER (@Fuente)  = 'DEVOLUCION'
 	BEGIN
-		SET @TIPOARTICULO = (SELECT TIPO FROM EXACTUS.FNICA.ARTICULO WHERE ARTICULO = @Articulo )
+		SET @TIPOARTICULO = (SELECT TIPO FROM FNICA.ARTICULO WHERE ARTICULO = @Articulo )
 		IF 	@TIPOARTICULO = 'T'
 		BEGIN
 			-- Esto fue para el caso de Chinandega Central
@@ -191,7 +214,7 @@ BEGIN TRY
 		
 			
 		END
-	
+	END
 	
 END TRY
 BEGIN CATCH	
@@ -203,5 +226,5 @@ BEGIN CATCH
 END CATCH
 
 
-SELECT * FROM FNICA.LINEA_DOC_INV WHERE DOCUMENTO_INV='TP0000020056'
-		
+SELECT * FROM FNICA.LINEA_DOC_INV WHERE DOCUMENTO_INV='TP0000020058'
+ROLLBACK		
