@@ -1,10 +1,10 @@
 
 --SELECT * FROM fnica.solOrdenTraslado WHERE CodEstado='REC' ORDER BY FechaRemision desc 
 --drop  PROCEDURE fnica.usp_invAtuoSugiereLotesExactusByDocumento
-CREATE PROCEDURE fnica.usp_invAtuoSugiereLotesExactusByDocumento(@NumOrdenTraslado AS NVARCHAR(20),@TipoDocumento AS NVARCHAR(20))
+CREATE PROCEDURE fnica.usp_invAtuoSugiereLotesExactusByDocumento(@Documento AS NVARCHAR(20),@TipoDocumento AS NVARCHAR(20))
 AS 
 /*
-SET @NumOrdenTraslado='OTLE01000001732'
+SET @Documento='OTLE01000001732'
 SET @TipoDocumento= 'T'
  */
 
@@ -24,7 +24,7 @@ BEGIN TRY
 		SELECT  A.BodegaOrigen,B.CodSucursal,B.Articulo,B.CantidadRemitida
 		  FROM fnica.solOrdenTraslado A
 		INNER JOIN fnica.solOrdenTrasladoDetalle B ON B.NumOrdenTraslado = A.NumOrdenTraslado AND B.NumSolicitud = A.NumSolicitud AND B.CodSucursal = A.CodSucursal
-		WHERE A.NumOrdenTraslado=@NumOrdenTraslado  
+		WHERE A.NumOrdenTraslado=@Documento  
 
 		DECLARE @iRwCnt INT,@i INT,@Cantidad DECIMAL(28,8),@Lote NVARCHAR(15),@Articulo NVARCHAR(20),@BodegaOrigen  NVARCHAR(20),@BodegaDestino NVARCHAR(20)
 
@@ -48,21 +48,24 @@ BEGIN TRY
 			
 			INSERT INTO fnica.tmpLotesAsignados(Fecha, TipoDocumento, Documento, Bodega,
 						BodegaDestino, Articulo, Lote, TipoTran, CantidadLote, Cantidad)
-			SELECT GETDATE(),'Traslado',@NumOrdenTraslado, Bodega,@BodegaDestino, Articulo, Lote,1, Cantidad,@Cantidad FROM #tmpResultado
+			SELECT GETDATE(),'Traslado',@Documento, Bodega,@BodegaDestino, Articulo, Lote,1, Cantidad,@Cantidad FROM #tmpResultado
 			
 			DROP TABLE #tmpResultado
 			set @i = @i + 1
 		END
-
+		
+		SELECT Fecha, TipoDocumento, Documento, Bodega, BodegaDestino, a.Articulo, b.DESCRIPCION, a.Lote,l.LOTE_DEL_PROVEEDOR,l.FECHA_VENCIMIENTO
+	       TipoTran, CantidadLote, Cantidad 
+		FROM fnica.tmpLotesAsignados a
+		INNER JOIN fnica.ARTICULO b ON b.Articulo = a.Articulo
+		INNER JOIN fnica.LOTE L ON a.Lote=l.LOTE WHERE Documento=@Documento
 	END
 	ELSE 
 		RAISERROR('No hay una configuracion establecida para el tipo de documento ingresado, verifique que sea valido',16,1)
 	DROP TABLE #Documento
 
 
-	SELECT Fecha, TipoDocumento, Documento, Bodega, BodegaDestino, Articulo, Lote,
-	       TipoTran, CantidadLote, Cantidad 
-	  FROM fnica.tmpLotesAsignados WHERE Documento=@NumOrdenTraslado
+	
 END TRY
 BEGIN CATCH
 	IF @@ERROR>0
@@ -71,7 +74,7 @@ BEGIN CATCH
 		IF OBJECT_ID('tempdb..#Documento') IS NOT NULL DROP TABLE #Documento 
 		DECLARE @Error AS NVARCHAR(200)
 		SET @Error=( SELECT  ERROR_MESSAGE())
-		DELETE  FROM fnica.tmpLotesAsignados WHERE Documento=@NumOrdenTraslado
+		DELETE  FROM fnica.tmpLotesAsignados WHERE Documento=@Documento
 		RAISERROR( @Error  ,16,1)
 	END	
 END CATCH
