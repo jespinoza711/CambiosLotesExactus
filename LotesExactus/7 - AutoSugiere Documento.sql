@@ -1,12 +1,12 @@
 
 --SELECT * FROM fnica.solOrdenTraslado WHERE CodEstado='REC' ORDER BY FechaRemision desc 
 --drop  PROCEDURE fnica.usp_invAtuoSugiereLotesExactusByDocumento
-CREATE PROCEDURE fnica.usp_invAtuoSugiereLotesExactusByDocumento(@Documento AS NVARCHAR(20),@TipoDocumento AS NVARCHAR(20))
+CREATE PROCEDURE fnica.usp_invAutoSugiereLotesExactusByDocumento( @Documento AS NVARCHAR(20),@TipoDocumento AS NVARCHAR(20))
 AS 
 /*
-SET @Documento='OTLE01000001732'
+SET @Documento='OTMT01000001810'
 SET @TipoDocumento= 'T'
- */
+*/		
 
 BEGIN TRY
 	Create Table #Documento (
@@ -17,14 +17,16 @@ BEGIN TRY
 			Cantidad decimal(28,8) default 0 
 		)
 
+	IF EXISTS(SELECT * FROM fnica.tmpLotesAsignados WHERE Documento=@Documento)
+		DELETE FROM fnica.tmpLotesAsignados WHERE Documento=@Documento
+
 	IF @TipoDocumento='T' 
 	BEGIN
-		
 		insert #Documento(BodegaOrigen,BodegaDestino, Articulo, Cantidad)
 		SELECT  A.BodegaOrigen,B.CodSucursal,B.Articulo,B.CantidadRemitida
 		  FROM fnica.solOrdenTraslado A
 		INNER JOIN fnica.solOrdenTrasladoDetalle B ON B.NumOrdenTraslado = A.NumOrdenTraslado AND B.NumSolicitud = A.NumSolicitud AND B.CodSucursal = A.CodSucursal
-		WHERE A.NumOrdenTraslado=@Documento  
+		WHERE A.NumOrdenTraslado=@Documento  AND B.CantidadRemitida>0
 
 		DECLARE @iRwCnt INT,@i INT,@Cantidad DECIMAL(28,8),@Lote NVARCHAR(15),@Articulo NVARCHAR(20),@BodegaOrigen  NVARCHAR(20),@BodegaDestino NVARCHAR(20)
 
@@ -54,11 +56,14 @@ BEGIN TRY
 			set @i = @i + 1
 		END
 		
-		SELECT Fecha, TipoDocumento, Documento, Bodega, BodegaDestino, a.Articulo, b.DESCRIPCION, a.Lote,l.LOTE_DEL_PROVEEDOR,l.FECHA_VENCIMIENTO
-	       TipoTran, CantidadLote, Cantidad 
+		SELECT Fecha, TipoDocumento, Documento, Bodega, BodegaDestino, a.Articulo, b.DESCRIPCION, a.Lote,l.LOTE_DEL_PROVEEDOR,
+		l.FECHA_VENCIMIENTO, TipoTran, CantidadLote, Cantidad 
 		FROM fnica.tmpLotesAsignados a
 		INNER JOIN fnica.ARTICULO b ON b.Articulo = a.Articulo
 		INNER JOIN fnica.LOTE L ON a.Lote=l.LOTE WHERE Documento=@Documento
+		
+		
+		
 	END
 	ELSE 
 		RAISERROR('No hay una configuracion establecida para el tipo de documento ingresado, verifique que sea valido',16,1)
@@ -78,4 +83,6 @@ BEGIN CATCH
 		RAISERROR( @Error  ,16,1)
 	END	
 END CATCH
+
+
 

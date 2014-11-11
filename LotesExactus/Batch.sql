@@ -623,12 +623,12 @@ GO
 
 --
 
-CREATE PROCEDURE fnica.usp_invAtuoSugiereLotesExactusByDocumento(@Documento AS NVARCHAR(20),@TipoDocumento AS NVARCHAR(20))
+CREATE PROCEDURE fnica.usp_invAutoSugiereLotesExactusByDocumento( @Documento AS NVARCHAR(20),@TipoDocumento AS NVARCHAR(20))
 AS 
 /*
-SET @NumOrdenTraslado='OTLE01000001732'
+SET @Documento='OTMT01000001810'
 SET @TipoDocumento= 'T'
- */
+*/		
 
 BEGIN TRY
 	Create Table #Documento (
@@ -639,14 +639,16 @@ BEGIN TRY
 			Cantidad decimal(28,8) default 0 
 		)
 
+	IF EXISTS(SELECT * FROM fnica.tmpLotesAsignados WHERE Documento=@Documento)
+		DELETE FROM fnica.tmpLotesAsignados WHERE Documento=@Documento
+
 	IF @TipoDocumento='T' 
 	BEGIN
-		
 		insert #Documento(BodegaOrigen,BodegaDestino, Articulo, Cantidad)
 		SELECT  A.BodegaOrigen,B.CodSucursal,B.Articulo,B.CantidadRemitida
 		  FROM fnica.solOrdenTraslado A
 		INNER JOIN fnica.solOrdenTrasladoDetalle B ON B.NumOrdenTraslado = A.NumOrdenTraslado AND B.NumSolicitud = A.NumSolicitud AND B.CodSucursal = A.CodSucursal
-		WHERE A.NumOrdenTraslado=@Documento  
+		WHERE A.NumOrdenTraslado=@Documento  AND B.CantidadRemitida>0
 
 		DECLARE @iRwCnt INT,@i INT,@Cantidad DECIMAL(28,8),@Lote NVARCHAR(15),@Articulo NVARCHAR(20),@BodegaOrigen  NVARCHAR(20),@BodegaDestino NVARCHAR(20)
 
@@ -675,11 +677,15 @@ BEGIN TRY
 			DROP TABLE #tmpResultado
 			set @i = @i + 1
 		END
-		SELECT Fecha, TipoDocumento, Documento, Bodega, BodegaDestino, a.Articulo, b.DESCRIPCION, a.Lote,l.LOTE_DEL_PROVEEDOR,l.FECHA_VENCIMIENTO
-	       TipoTran, CantidadLote, Cantidad 
+		
+		SELECT Fecha, TipoDocumento, Documento, Bodega, BodegaDestino, a.Articulo, b.DESCRIPCION, a.Lote,l.LOTE_DEL_PROVEEDOR,
+		l.FECHA_VENCIMIENTO, TipoTran, CantidadLote, Cantidad 
 		FROM fnica.tmpLotesAsignados a
 		INNER JOIN fnica.ARTICULO b ON b.Articulo = a.Articulo
 		INNER JOIN fnica.LOTE L ON a.Lote=l.LOTE WHERE Documento=@Documento
+		
+		
+		
 	END
 	ELSE 
 		RAISERROR('No hay una configuracion establecida para el tipo de documento ingresado, verifique que sea valido',16,1)
@@ -699,4 +705,129 @@ BEGIN CATCH
 		RAISERROR( @Error  ,16,1)
 	END	
 END CATCH
+
+
+GO 
+
+
+
+
+ALTER  procedure [fnica].[invGetLotesByArticulo](@Articulo AS NVARCHAR(20),@Bodega AS NVARCHAR(4),@SoloConExistencia AS INT)
+AS
+
+SELECT L.LOTE,L.LOTE_DEL_PROVEEDOR,L.ARTICULO,AR.DESCRIPCION DescrArticulo,L.FECHA_ENTRADA,L.FECHA_VENCIMIENTO,L.PROVEEDOR,P.NOMBRE NombreProveedor,isnull(EL.CANT_DISPONIBLE,0) Existencia 
+  FROM fnica.LOTE L
+LEFT JOIN fnica.EXISTENCIA_LOTE EL ON EL.ARTICULO = L.ARTICULO AND EL.LOTE = L.LOTE
+INNER JOIN fnica.ARTICULO AR ON L.ARTICULO=AR.ARTICULO
+LEFT JOIN fnica.PROVEEDOR P ON L.PROVEEDOR=P.PROVEEDOR
+WHERE (EL.Bodega=@Bodega OR @Bodega='*') AND (L.ARTICULO= @Articulo OR @Articulo='*') AND (@SoloConExistencia=0 OR EL.CANT_DISPONIBLE>0)  
+
+
+GO 
+
+
+
+
+ALTER procedure [fnica].[invGetLotesByArticuloGlobal](@Articulo AS NVARCHAR(20))
+AS 
+
+SELECT A.LOTE,A.LOTE_DEL_PROVEEDOR,A.ARTICULO,A.FECHA_ENTRADA,A.FECHA_VENCIMIENTO,A.PROVEEDOR,B.NOMBRE NombreProveedor 
+  FROM FNICA.LOTE A
+LEFT JOIN fnica.PROVEEDOR B ON B.PROVEEDOR = A.Proveedor
+WHERE A.Articulo=@Articulo 
+
+
+
+
+GO 
+
+drop procedure fnica.invGetLotesByArticuloCaptacionBoletas
+
+GO 
+
+DROP PROCEDURE [fnica].[invGetLotesByArticuloIDLote]
+
+GO 
+
+CREATE  procedure [fnica].[invGetLotesByArticuloLote](@Lote as NVARCHAR(15),@Articulo AS NVARCHAR(20),@Bodega AS NVARCHAR(4))
+AS 
+
+SELECT L.LOTE, L.LOTE_DEL_PROVEEDOR, L.Articulo, L.FECHA_ENTRADA, L.FECHA_VENCIMIENTO,L.Proveedor, B.NOMBRE NombreProveedor,
+		ISNULL(EL.CANT_DISPONIBLE,0) Existencia
+  FROM FNICA.LOTE L
+LEFT JOIN fnica.PROVEEDOR B ON B.PROVEEDOR = L.Proveedor
+LEFT JOIN (SELECT * FROM  fnica.EXISTENCIA_LOTE WHERE Bodega = @Bodega ) EL ON L.LOTE=EL.LOTE 
+WHERE L.Articulo=@Articulo  AND (L.Lote=@Lote OR @Lote='*')
+
+GO 
+
+DROP PROCEDURE fnica.[invGetLotesByArticuloLoteProveedor]
+
+
+GO 
+
+
+DROP PROCEDURE fnica.invGetDocumentosSinLotes 
+
+GO 
+
+drop procedure fnica.invGetAjustesLotesByRange
+
+GO 
+
+drop procedure fnica.invGetConsultaAjustesLotes
+
+GO 
+
+DROP PROCEDURE fnica.invInsertMovLote
+
+GO 
+
+drop procedure fnica.uspinvActualizaFacturaIsLoteGenerado
+
+GO 
+
+drop procedure fnica.uspInvInsertCabeceraAjusteLotes
+
+GO 
+
+drop  procedure fnica.uspInvInsertDetalleAjusteLote
+
+GO 
+
+DROP VIEW [fnica].[vinvMasterLotes]
+
+GO 
+
+CREATE  VIEW [fnica].[vinvExistenciaLotes] 
+AS
+
+ SELECT L.LOTE, L.LOTE_DEL_PROVEEDOR, L.ARTICULO,A.DESCRIPCION,EL.BODEGA,L.FECHA_ENTRADA,
+		L.FECHA_VENCIMIENTO,P.PROVEEDOR,P.NOMBRE NombreProveedor,EL.CANT_DISPONIBLE
+ FROM fnica.LOTE L
+ INNER JOIN fnica.EXISTENCIA_LOTE EL ON EL.ARTICULO = L.ARTICULO AND EL.LOTE = L.LOTE
+ INNER JOIN fnica.ARTICULO A ON L.ARTICULO=A.ARTICULO AND EL.ARTICULO=A.ARTICULO
+ LEFT JOIN fnica.PROVEEDOR P ON L.PROVEEDOR=P.PROVEEDOR
+ 
+
+GO 
+
+
+DROP PROCEDURE	 [fnica].[invGetExistenciaBodegaLoteExcludeDocumento]
+
+GO 
+
+
+CREATE  PROCEDURE [fnica].[invGetExistenciaBodegaLote] @Articulo AS NVARCHAR(20),@Bodega AS NVARCHAR(10)
+AS 
+
+SELECT EL.LOTE, EL.LOTE_DEL_PROVEEDOR, EL.ARTICULO, EL.DESCRIPCION, EL.BODEGA,
+       EL.FECHA_ENTRADA, EL.FECHA_VENCIMIENTO, EL.PROVEEDOR, EL.NombreProveedor,
+       EL.CANT_DISPONIBLE
+  FROM fnica.[vinvExistenciaLotes] EL
+WHERE (El.BODEGA=@Bodega OR @Bodega='*') AND (EL.ARTICULO=@Articulo OR @Articulo='*')  AND EL.CANT_DISPONIBLE>0
+ORDER BY EL.FECHA_VENCIMIENTO ASC 
+
+
+
 
