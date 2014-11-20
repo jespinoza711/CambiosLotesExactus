@@ -1,3 +1,9 @@
+
+
+set ANSI_NULLS ON
+set QUOTED_IDENTIFIER ON
+go
+
 ALTER PROCEDURE [fnica].[usp_solGuardarEntradaSalidaProductos] @NumOrdenTraslado nvarchar(15),
 															@CodSucursal NVARCHAR(4),
 															@NumEntradaSalida AS NVARCHAR(100),
@@ -149,6 +155,7 @@ set @sSQL = N' UPDATE fnica.solOrdenTraslado SET ' + @campo + ' = '''+  @NumEntr
 EXEC sp_executesql 
      @query = @sSQL
      
+
 
 
 

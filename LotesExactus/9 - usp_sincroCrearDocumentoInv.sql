@@ -1,11 +1,3 @@
-set ANSI_NULLS ON
-set QUOTED_IDENTIFIER ON
-go
-
-
-
-
-
 
 
 
@@ -71,6 +63,7 @@ EXEC fnica.usp_sincroCrearCabeceraTransInv
 	@Paquete OUTPUT
 
 
+
 /*Insertar el detalle del documento*/
 CREATE TABLE #solOrdenTrasladoDetalle(
 	[Articulo] [nvarchar](50) ,
@@ -78,13 +71,11 @@ CREATE TABLE #solOrdenTrasladoDetalle(
 	[Cantidad] [decimal](18, 4) NULL DEFAULT 0
 )
 
-insert #solOrdenTrasladoDetalle (Articulo,Lote,CantidadRemitida)
+insert #solOrdenTrasladoDetalle (Articulo,Lote,Cantidad)
 SELECT Articulo,Lote,CantidadLote 
   FROM fnica.tmpLotesAsignados WHERE Documento=@NumOrdenTraslado
   	
-/*SELECT Articulo,CantidadRemitida
-FROM fnica.solOrdenTrasladoDetalle
-WHERE NumOrdenTraslado= @NumOrdenTraslado AND CodSucursal=@BodegaDestino*/
+
 
 set @iRowCount  = @@RowCount
 Alter table #solOrdenTrasladoDetalle add ID int identity(1,1)
@@ -96,23 +87,18 @@ set @iCounter = 1
 
 WHILE (@iCounter <= @iRowCount )
 BEGIN -- 
-	select @Articulo = Articulo,@Cantidad = CantidadLote,@Lote=Lote
+	select @Articulo = Articulo,@Cantidad = Cantidad,@Lote=Lote
 	  from #solOrdenTrasladoDetalle where ID = @iCounter 
 	IF (@Cantidad<>0) 
-		EXEC FNICA.usp_sincroInsertaLineaTransInvLoteAutoSugerido @Fuente,@BodegaOrigen,@Paquete,@NumDocumento,@Articulo,@Cantidad,0,0,0,0,@BodegaDestino,,@Lote
-		EXEC fnica.usp_sincroInsertaLineaTransInv
-		@Fuente,
-		@BodegaOrigen,
-		@iCounter, 
-		@NumDocumento,
-		@Articulo ,
-		@Cantidad ,
-		0, 
-		0, 
-		@BodegaDestino 
+		EXEC FNICA.usp_sincroInsertaLineaTransInvLotes @Fuente,@BodegaOrigen,@NumDocumento,@Articulo,@Cantidad,0,0,0,0,@BodegaDestino,@Lote,'T' 
+		
 
 	SET @iCounter = @iCounter + 1
 END -- 
+
+/*Eliminar los autosugeridos*/
+
+DELETE FROM fnica.tmpLotesAsignados WHERE Documento=@NumOrdenTraslado
 
 /*Verificar si el paquete tiene lineas*/
 DECLARE @CantidadRegistros INT 
@@ -135,7 +121,6 @@ end
 /*Actualizar el Consecutivo*/
 IF (@CantidadRegistros>0)
 	EXEC fnica.usp_sincroActualizaConsecutivoInv @Fuente,@BodegaDestino
-
 
 
 

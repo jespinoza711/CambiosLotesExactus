@@ -1,5 +1,4 @@
-
-ALTER PROCEDURE [fnica].[usp_sincroInsertaLineaTransInvLotes] @Fuente nvarchar(20), @CODSUCURSAL NVARCHAR(4),@Linea int,  
+CREATE PROCEDURE [fnica].[usp_sincroInsertaLineaTransInvLotes] @Fuente nvarchar(20), @CODSUCURSAL NVARCHAR(4),  
 @noDOCUMENTO NVARCHAR(20) , @Articulo varchar(20), @Cantidad decimal (28,8),
 @PrecioLocal decimal (28,8), @PrecioDolar decimal (28,8),@CostoLocal decimal (28,8), @CostoDolar decimal (28,8), @BODEGADESTINO NVARCHAR(4),
 @Lote NVARCHAR(15),@TipoTran AS NVARCHAR(1)
@@ -7,12 +6,22 @@ ALTER PROCEDURE [fnica].[usp_sincroInsertaLineaTransInvLotes] @Fuente nvarchar(2
 AS
 
 DECLARE @PAQUETE NVARCHAR(4), @DOCUMENTO NVARCHAR (20), @TIPOARTICULO NVARCHAR(1),@TMPCODSUCURSAL NVARCHAR (4)
-DECLARE @AutoSuguiereLotes AS BIT
+DECLARE @AutoSuguiereLotes AS BIT,@Linea INT
 
 
 SET @AutoSuguiereLotes= CAST(( SELECT Valor
                             FROM fnica.invParametrosLOTE WHERE IDParametro='UsaLotesExactus') AS BIT)
 
+
+SET @Linea= (SELECT count(LINEA_DOC_INV)
+	               FROM fnica.LINEA_DOC_INV (NOLOCK) WHERE DOCUMENTO_INV=@noDOCUMENTO)
+	IF (@Linea IS NULL)
+		SET @Linea=0
+		
+SET @Linea=@Linea+1
+
+
+		
 
 -- THIS WAS BEFORE ON LINE
 IF UPPER (@Fuente)  = 'SOLICITUD'
